@@ -1,0 +1,163 @@
+{
+  "site": {
+    "title": "DnD Хоумбрю",
+    "subtitle": "База наших кастомных материалов"
+  },
+
+  "sources": {
+    "CST": "Кастомные",
+    "HB": "Homebrew",
+    "PHB": "Книга игрока",
+    "DMG": "Руководство мастера",
+    "MM": "Бестиарий",
+    "XGE": "Руководство Занатара",
+    "TCE": "Котёл Таши",
+    "MPMM": "Мультивселенная Морденкайнена",
+    "SAC": "Spelljammer: Adventures in Space"
+  },
+
+  "sections": [
+    {
+      "id": "classes",
+      "title": "Классы",
+      "icon": "⚔️",
+      "card": "image",
+      "tags": "features",
+      "filters": [{ "field": "source", "label": "Источник" }],
+      "meta": [
+        { "field": "hit_die", "label": "Кость хитов" },
+        { "field": "primary", "label": "Основная характеристика" },
+        { "field": "saves", "label": "Спасброски", "format": "list" },
+        { "field": "armor", "label": "Доспехи" },
+        { "field": "weapons", "label": "Оружие" }
+      ]
+    },
+    {
+      "id": "races",
+      "title": "Расы и происхождения",
+      "icon": "👤",
+      "card": "image",
+      "tags": "traits",
+      "filters": [{ "field": "source", "label": "Источник" }],
+      "meta": [
+        { "field": "creature_type", "label": "Вид существа" },
+        { "field": "size", "label": "Размер" },
+        { "field": "speed", "label": "Скорость" },
+        { "field": "abilities", "label": "Характеристики", "format": "abilities" },
+        { "field": "age", "label": "Возраст" },
+        { "field": "languages", "label": "Языки" }
+      ]
+    },
+    {
+      "id": "spells",
+      "title": "Заклинания",
+      "icon": "✨",
+      "card": "compact",
+      "badge": { "field": "level", "format": "spellLevel" },
+      "subtitle": "school",
+      "tags": "classes",
+      "tagsTitle": "Классы",
+      "sort": ["level", "name_ru"],
+      "accent": {
+        "field": "school",
+        "colors": {
+          "воплощение": "#FF6B6B",
+          "вызов": "#4ECDC4",
+          "иллюзия": "#FFD166",
+          "очарование": "#C74DED",
+          "прорицание": "#06D6A0",
+          "преобразование": "#118AB2",
+          "ограждение": "#EF476F",
+          "некромантия": "#5a8ca0",
+          "чёрный эфир": "#8a8a8a",
+          "красный эфир": "#FF3333",
+          "синий эфир": "#3366FF",
+          "зелёный эфир": "#33CC33",
+          "белый эфир": "#FFFFFF"
+        }
+      },
+      "filters": [
+        { "field": "level", "label": "Уровень", "format": "spellLevel" },
+        { "field": "school", "label": "Школа" },
+        { "field": "source", "label": "Источник" }
+      ],
+      "meta": [
+        { "field": "casting_time", "label": "Время накладывания" },
+        { "field": "range", "label": "Дистанция" },
+        { "field": "components", "label": "Компоненты", "format": "components" },
+        { "field": "duration", "label": "Длительность" }
+      ]
+    },
+    {
+      "id": "backgrounds",
+      "title": "Предыстории",
+      "icon": "📜",
+      "card": "compact",
+      "filters": [{ "field": "source", "label": "Источник" }],
+      "meta": [
+        { "field": "skills", "label": "Навыки", "format": "list" },
+        { "field": "tools", "label": "Инструменты" },
+        { "field": "equipment", "label": "Снаряжение" }
+      ]
+    },
+    {
+      "id": "feats",
+      "title": "Черты",
+      "icon": "🔮",
+      "card": "compact",
+      "subtitle": "prerequisite",
+      "filters": [{ "field": "source", "label": "Источник" }],
+      "meta": [{ "field": "prerequisite", "label": "Требование" }]
+    },
+    {
+      "id": "bestiary",
+      "title": "Бестиарий",
+      "icon": "👹",
+      "card": "compact",
+      "badge": { "field": "cr", "format": "cr" },
+      "subtitle": "type",
+      "filters": [
+        { "field": "cr", "label": "Опасность", "format": "cr" },
+        { "field": "type", "label": "Тип" },
+        { "field": "source", "label": "Источник" }
+      ],
+      "meta": [
+        { "field": "size", "label": "Размер" },
+        { "field": "type", "label": "Тип" },
+        { "field": "ac", "label": "Класс доспеха" },
+        { "field": "hp", "label": "Хиты" },
+        { "field": "speed", "label": "Скорость" },
+        { "field": "cr", "label": "Опасность", "format": "cr" }
+      ]
+    },
+    {
+      "id": "items",
+      "title": "Магические предметы",
+      "icon": "💎",
+      "card": "compact",
+      "badge": { "field": "rarity" },
+      "subtitle": "type",
+      "accent": {
+        "field": "rarity",
+        "colors": {
+          "обычный": "#aaaaaa",
+          "необычный": "#4caf50",
+          "редкий": "#4a6fa5",
+          "очень редкий": "#9c4dcc",
+          "легендарный": "#c99752",
+          "артефакт": "#d32f2f"
+        }
+      },
+      "filters": [
+        { "field": "rarity", "label": "Редкость" },
+        { "field": "type", "label": "Тип" },
+        { "field": "source", "label": "Источник" }
+      ],
+      "meta": [
+        { "field": "type", "label": "Тип" },
+        { "field": "rarity", "label": "Редкость" },
+        { "field": "attunement", "label": "Настройка" }
+      ]
+    }
+  ]
+}

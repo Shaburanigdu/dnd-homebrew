@@ -1,0 +1,12 @@
+node_modules/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Старая версия сайта — больше не используется, лежит только локально
+common.js
+races.js
+races.json
+spells.js
+template.html
+races/

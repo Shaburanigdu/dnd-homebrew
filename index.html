@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Главная</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="main-container">
+        <aside class="sidebar" id="sidebar"></aside>
+        <main class="content-area" id="content">
+            <div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Загрузка...</p></div>
+        </main>
+    </div>
+    <script src="js/core.js"></script>
+    <script>
+        (async () => {
+            if (DND.fileProtocolWarning()) return;
+            const content = document.getElementById('content');
+            try {
+                const cfg = await DND.renderLayout();
+                const counts = await Promise.all(cfg.sections.map(s => DND.loadIndex(s.id).then(l => l.length)));
+                content.innerHTML = `
+                    <div class="welcome-content">
+                        <h1>${DND.escapeHtml(cfg.site.title)}</h1>
+                        <p>${DND.escapeHtml(cfg.site.subtitle || '')}</p>
+                        <div class="quick-links">
+                            ${cfg.sections.map((s, i) => `
+                                <a href="list.html?s=${s.id}" class="quick-link">
+                                    <span class="quick-link-icon">${s.icon || '•'}</span>
+                                    <h3>${DND.escapeHtml(s.title)}</h3>
+                                    <p>${counts[i] ? `Записей: ${counts[i]}` : 'Пока пусто'}</p>
+                                </a>`).join('')}
+                        </div>
+                    </div>`;
+            } catch (err) {
+                console.error(err);
+                DND.showError(content, err.message);
+            }
+        })();
+    </script>
+</body>
+</html>
