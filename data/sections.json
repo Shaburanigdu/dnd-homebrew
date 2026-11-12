@@ -1,27 +1,30 @@
 {
   "site": {
     "title": "DnD Хоумбрю",
-    "subtitle": "База наших кастомных материалов"
+    "subtitle": "База наших кастомных материалов",
+    "editions": ["5e42", "5e∞"],
+    "repo": "https://github.com/Shaburanigdu/dnd-homebrew"
   },
 
   "sources": {
     "CST": "Кастомные",
     "HB": "Homebrew",
-    "PHB": "Книга игрока",
-    "DMG": "Руководство мастера",
-    "MM": "Бестиарий",
-    "XGE": "Руководство Занатара",
-    "TCE": "Котёл Таши",
-    "MPMM": "Мультивселенная Морденкайнена",
+    "PHB": "Player's Handbook",
+    "DMG": "Dungeon Master's Guide",
+    "MM": "Monster Manual",
+    "XGE": "Xanathar's Guide to Everything",
+    "TCE": "Tasha's Cauldron of Everything",
+    "MPMM": "Mordenkainen Presents: Monsters of the Multiverse",
     "SAC": "Spelljammer: Adventures in Space"
   },
+  "homebrewSources": ["CST", "HB"],
 
   "sections": [
     {
       "id": "classes",
       "title": "Классы",
-      "icon": "⚔️",
-      "card": "image",
+      "icon": "fa-hat-wizard",
+      "view": "cards",
       "tags": "features",
       "filters": [{ "field": "source", "label": "Источник" }],
       "meta": [
@@ -35,8 +38,8 @@
     {
       "id": "races",
       "title": "Расы и происхождения",
-      "icon": "👤",
-      "card": "image",
+      "icon": "fa-user-group",
+      "view": "cards",
       "tags": "traits",
       "filters": [{ "field": "source", "label": "Источник" }],
       "meta": [
@@ -45,19 +48,67 @@
         { "field": "speed", "label": "Скорость" },
         { "field": "abilities", "label": "Характеристики", "format": "abilities" },
         { "field": "age", "label": "Возраст" },
+        { "field": "alignment", "label": "Мировоззрение" },
         { "field": "languages", "label": "Языки" }
       ]
     },
     {
+      "id": "backgrounds",
+      "title": "Предыстории",
+      "icon": "fa-scroll",
+      "view": "list",
+      "group": { "by": "source" },
+      "filters": [{ "field": "source", "label": "Источник", "format": "source" }],
+      "meta": [
+        { "field": "skills", "label": "Навыки", "format": "list" },
+        { "field": "tools", "label": "Инструменты" },
+        { "field": "languages", "label": "Языки" },
+        { "field": "equipment", "label": "Снаряжение" }
+      ]
+    },
+    {
+      "id": "feats",
+      "title": "Черты",
+      "icon": "fa-puzzle-piece",
+      "view": "list",
+      "group": { "by": "source" },
+      "filters": [{ "field": "source", "label": "Источник", "format": "source" }],
+      "meta": [{ "field": "prerequisite", "label": "Требование" }]
+    },
+    {
       "id": "spells",
       "title": "Заклинания",
-      "icon": "✨",
-      "card": "compact",
+      "icon": "fa-book-open",
+      "view": "list",
+      "group": { "by": "level", "format": "spellLevel" },
       "badge": { "field": "level", "format": "spellLevel" },
+      "prefix": { "field": "level" },
       "subtitle": "school",
       "tags": "classes",
       "tagsTitle": "Классы",
-      "sort": ["level", "name_ru"],
+      "rowRight": "components",
+      "markers": [
+        { "field": "concentration", "label": "К", "title": "концентрация", "color": "#3e9a8e" },
+        { "field": "ritual", "label": "Р", "title": "ритуал", "color": "#8b6cc7" }
+      ],
+      "rowIcon": {
+        "field": "school",
+        "icons": {
+          "воплощение": "fa-fire",
+          "вызов": "fa-wand-magic-sparkles",
+          "иллюзия": "fa-mask",
+          "некромантия": "fa-skull",
+          "ограждение": "fa-shield-halved",
+          "очарование": "fa-heart",
+          "преобразование": "fa-arrows-rotate",
+          "прорицание": "fa-eye",
+          "чёрный эфир": "fa-circle-half-stroke",
+          "красный эфир": "fa-fire-flame-curved",
+          "синий эфир": "fa-water",
+          "зелёный эфир": "fa-leaf",
+          "белый эфир": "fa-sun"
+        }
+      },
       "accent": {
         "field": "school",
         "colors": {
@@ -69,7 +120,7 @@
           "преобразование": "#118AB2",
           "ограждение": "#EF476F",
           "некромантия": "#5a8ca0",
-          "чёрный эфир": "#8a8a8a",
+          "чёрный эфир": "#9a9a9a",
           "красный эфир": "#FF3333",
           "синий эфир": "#3366FF",
           "зелёный эфир": "#33CC33",
@@ -78,52 +129,38 @@
       },
       "filters": [
         { "field": "level", "label": "Уровень", "format": "spellLevel" },
+        { "field": "classes", "label": "Класс" },
         { "field": "school", "label": "Школа" },
-        { "field": "source", "label": "Источник" }
+        { "field": "concentration", "label": "Концентрация", "format": "yesno" },
+        { "field": "ritual", "label": "Ритуал", "format": "yesno" },
+        { "field": "source", "label": "Источник", "format": "source" }
       ],
       "meta": [
         { "field": "casting_time", "label": "Время накладывания" },
         { "field": "range", "label": "Дистанция" },
-        { "field": "components", "label": "Компоненты", "format": "components" },
+        { "field": "components", "label": "Компоненты" },
         { "field": "duration", "label": "Длительность" }
       ]
     },
     {
-      "id": "backgrounds",
-      "title": "Предыстории",
-      "icon": "📜",
-      "card": "compact",
-      "filters": [{ "field": "source", "label": "Источник" }],
-      "meta": [
-        { "field": "skills", "label": "Навыки", "format": "list" },
-        { "field": "tools", "label": "Инструменты" },
-        { "field": "equipment", "label": "Снаряжение" }
-      ]
-    },
-    {
-      "id": "feats",
-      "title": "Черты",
-      "icon": "🔮",
-      "card": "compact",
-      "subtitle": "prerequisite",
-      "filters": [{ "field": "source", "label": "Источник" }],
-      "meta": [{ "field": "prerequisite", "label": "Требование" }]
-    },
-    {
       "id": "bestiary",
       "title": "Бестиарий",
-      "icon": "👹",
-      "card": "compact",
+      "icon": "fa-dragon",
+      "view": "list",
+      "group": { "by": "letter" },
       "badge": { "field": "cr", "format": "cr" },
+      "prefix": { "field": "cr", "format": "crShort" },
       "subtitle": "type",
       "filters": [
+        { "field": "size", "label": "Размер" },
+        { "field": "type", "label": "Вид" },
         { "field": "cr", "label": "Опасность", "format": "cr" },
-        { "field": "type", "label": "Тип" },
-        { "field": "source", "label": "Источник" }
+        { "field": "source", "label": "Источник", "format": "source" }
       ],
       "meta": [
         { "field": "size", "label": "Размер" },
-        { "field": "type", "label": "Тип" },
+        { "field": "type", "label": "Вид" },
+        { "field": "alignment", "label": "Мировоззрение" },
         { "field": "ac", "label": "Класс доспеха" },
         { "field": "hp", "label": "Хиты" },
         { "field": "speed", "label": "Скорость" },
@@ -133,25 +170,43 @@
     {
       "id": "items",
       "title": "Магические предметы",
-      "icon": "💎",
-      "card": "compact",
+      "icon": "fa-gem",
+      "view": "list",
+      "group": { "by": "letter" },
       "badge": { "field": "rarity" },
       "subtitle": "type",
+      "rowIcon": {
+        "field": "type",
+        "icons": {
+          "оружие": "fa-gavel",
+          "доспех": "fa-shield-halved",
+          "кольцо": "fa-ring",
+          "волшебная палочка": "fa-wand-sparkles",
+          "жезл": "fa-wand-magic",
+          "посох": "fa-staff-snake",
+          "зелье": "fa-flask",
+          "свиток": "fa-scroll",
+          "чудесный предмет": "fa-hand-sparkles"
+        },
+        "default": "fa-hand-sparkles"
+      },
       "accent": {
         "field": "rarity",
         "colors": {
           "обычный": "#aaaaaa",
           "необычный": "#4caf50",
-          "редкий": "#4a6fa5",
+          "редкий": "#4a8fd4",
           "очень редкий": "#9c4dcc",
-          "легендарный": "#c99752",
-          "артефакт": "#d32f2f"
+          "легендарный": "#e0a040",
+          "артефакт": "#d84343"
         }
       },
+      "rowBar": true,
       "filters": [
-        { "field": "rarity", "label": "Редкость" },
         { "field": "type", "label": "Тип" },
-        { "field": "source", "label": "Источник" }
+        { "field": "rarity", "label": "Редкость" },
+        { "field": "attunement", "label": "Настройка" },
+        { "field": "source", "label": "Источник", "format": "source" }
       ],
       "meta": [
         { "field": "type", "label": "Тип" },

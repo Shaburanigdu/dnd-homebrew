@@ -24,6 +24,10 @@ function summaryFields(sec) {
     if (sec.subtitle) fields.add(sec.subtitle);
     if (sec.badge) fields.add(sec.badge.field);
     if (sec.accent) fields.add(sec.accent.field);
+    if (sec.prefix) fields.add(sec.prefix.field);
+    if (sec.rowIcon) fields.add(sec.rowIcon.field);
+    if (sec.group && !['source', 'letter'].includes(sec.group.by)) fields.add(sec.group.by);
+    (sec.markers || []).forEach(m => fields.add(m.field));
     (sec.filters || []).forEach(f => fields.add(f.field));
     (sec.cardFields || []).forEach(f => fields.add(f));
     return [...fields];

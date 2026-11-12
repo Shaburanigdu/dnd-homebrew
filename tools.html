@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Инструменты</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="page">
+        <div class="main-container">
+            <aside class="sidebar" id="sidebar"></aside>
+            <main class="content-area" id="content">
+
+                <div class="tabs tool-tabs">
+                    <a class="tab" href="#pointbuy" data-tool="pointbuy"><i class="fas fa-chart-simple"></i> Закуп характеристик</a>
+                    <a class="tab" href="#dice" data-tool="dice"><i class="fas fa-dice-d20"></i> Бросок костей</a>
+                    <a class="tab" href="#encounter" data-tool="encounter"><i class="fas fa-skull-crossbones"></i> Сложность боя</a>
+                </div>
+
+                <!-- ЗАКУП ХАРАКТЕРИСТИК -->
+                <section class="card tool" id="tool-pointbuy" hidden>
+                    <h2 class="tool-title">Закуп характеристик</h2>
+                    <p class="tool-hint">Стандартный закуп: 27 очков, значения от 8 до 15 до бонусов происхождения.</p>
+                    <div class="points-left">Осталось очков: <b id="pb-left">27</b> / 27</div>
+                    <div class="table-wrap">
+                        <table class="pb-table">
+                            <thead><tr><th>Характеристика</th><th>Значение</th><th>Цена</th><th>Бонус</th><th>Итог</th><th>Мод.</th></tr></thead>
+                            <tbody id="pb-body"></tbody>
+                        </table>
+                    </div>
+                    <div class="tool-actions">
+                        <button class="btn btn-reset" id="pb-reset">Сбросить</button>
+                        <button class="btn btn-find" id="pb-standard">Стандартный набор (15, 14, 13, 12, 10, 8)</button>
+                    </div>
+                </section>
+
+                <!-- БРОСОК КОСТЕЙ -->
+                <section class="card tool" id="tool-dice" hidden>
+                    <h2 class="tool-title">Бросок костей</h2>
+                    <div class="dice-buttons" id="dice-buttons"></div>
+                    <div class="toolbar">
+                        <div class="search-input"><input type="text" id="dice-formula" placeholder="Например: 2к6+3, 4d6, к20-1" value="1к20"></div>
+                        <select class="filter-select" id="dice-mode">
+                            <option value="normal">Обычный бросок</option>
+                            <option value="adv">С преимуществом</option>
+                            <option value="dis">С помехой</option>
+                        </select>
+                        <button class="btn btn-find" id="dice-roll"><i class="fas fa-dice"></i> Бросить</button>
+                    </div>
+                    <div class="dice-result" id="dice-result"></div>
+                    <h3 class="list-group-title">История</h3>
+                    <ul class="dice-history" id="dice-history"><li class="tool-hint">Пока пусто — бросай!</li></ul>
+                </section>
+
+                <!-- СЛОЖНОСТЬ БОЯ -->
+                <section class="card tool" id="tool-encounter" hidden>
+                    <h2 class="tool-title">Сложность боя</h2>
+                    <p class="tool-hint">Расчёт по опыту монстров и порогам группы (правила 5e 2014).</p>
+                    <div class="enc-columns">
+                        <div>
+                            <h3 class="list-group-title">Группа</h3>
+                            <div id="enc-party"></div>
+                            <button class="btn btn-reset btn-small" id="enc-add-party"><i class="fas fa-plus"></i> Добавить игроков</button>
+                        </div>
+                        <div>
+                            <h3 class="list-group-title">Монстры</h3>
+                            <div id="enc-monsters"></div>
+                            <button class="btn btn-reset btn-small" id="enc-add-monster"><i class="fas fa-plus"></i> Добавить монстров</button>
+                        </div>
+                    </div>
+                    <div class="enc-result" id="enc-result"></div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+    <script src="js/core.js"></script>
+    <script src="js/tools.js"></script>
+</body>
+</html>

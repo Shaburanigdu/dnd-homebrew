@@ -148,7 +148,7 @@ async function selectTemplate(sec, button) {
         editor.value = await res.text();
         editor.dataset.dirty = '0';
         currentSection = sec;
-        document.querySelectorAll('#template-buttons .source-btn').forEach(b => b.classList.toggle('active', b === button));
+        document.querySelectorAll('#template-buttons .chip').forEach(b => b.classList.toggle('active', b === button));
         draft.save({ section: sec.id, text: editor.value });
         result.innerHTML = '';
         previewSection.hidden = true;
@@ -161,7 +161,7 @@ async function selectTemplate(sec, button) {
 
 (async () => {
     if (DND.fileProtocolWarning()) return;
-    const cfg = await DND.renderLayout({ pageTitle: 'Прислать свою запись' });
+    const cfg = await DND.renderLayout({ pageTitle: 'Прислать свою запись', activePage: 'help' });
 
     // Кнопки только для разделов, у которых есть _template.json
     const box = document.getElementById('template-buttons');
@@ -174,8 +174,8 @@ async function selectTemplate(sec, button) {
 
     available.forEach(sec => {
         const b = document.createElement('button');
-        b.className = 'source-btn';
-        b.textContent = `${sec.icon || ''} ${sec.title}`;
+        b.className = 'chip';
+        b.innerHTML = `<i class="fas ${sec.icon || 'fa-book'}"></i> ${DND.escapeHtml(sec.title)}`;
         b.addEventListener('click', () => selectTemplate(sec, b));
         box.appendChild(b);
     });

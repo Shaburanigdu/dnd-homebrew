@@ -6,37 +6,64 @@
     <title>Главная</title>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="main-container">
-        <aside class="sidebar" id="sidebar"></aside>
-        <main class="content-area" id="content">
-            <div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Загрузка...</p></div>
-        </main>
+    <div class="page">
+        <div class="main-container">
+            <aside class="sidebar" id="sidebar"></aside>
+            <main class="content-area" id="content">
+                <div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Загрузка...</p></div>
+            </main>
+        </div>
     </div>
     <script src="js/core.js"></script>
     <script>
         (async () => {
             if (DND.fileProtocolWarning()) return;
             const content = document.getElementById('content');
+            const esc = DND.escapeHtml;
             try {
-                const cfg = await DND.renderLayout();
-                const counts = await Promise.all(cfg.sections.map(s => DND.loadIndex(s.id).then(l => l.length)));
+                const cfg = await DND.renderLayout({ pageTitle: 'Главная' });
+                const indexes = await Promise.all(cfg.sections.map(s => DND.loadIndex(s.id)));
+                const total = indexes.reduce((n, l) => n + l.length, 0);
+
                 content.innerHTML = `
-                    <div class="welcome-content">
-                        <h1>${DND.escapeHtml(cfg.site.title)}</h1>
-                        <p>${DND.escapeHtml(cfg.site.subtitle || '')}</p>
-                        <div class="quick-links">
-                            ${cfg.sections.map((s, i) => `
-                                <a href="list.html?s=${s.id}" class="quick-link">
-                                    <span class="quick-link-icon">${s.icon || '•'}</span>
-                                    <h3>${DND.escapeHtml(s.title)}</h3>
-                                    <p>${counts[i] ? `Записей: ${counts[i]}` : 'Пока пусто'}</p>
-                                </a>`).join('')}
+                    <div class="card welcome">
+                        <h2>Добро пожаловать за наш стол!</h2>
+                        <p>${esc(cfg.site.subtitle || '')}. Расы, классы, заклинания и прочие находки нашей компании — в одном месте.</p>
+                        <div class="welcome-stats">
+                            <span><b>${total}</b> записей</span>
+                            <span><b>${cfg.sections.filter((s, i) => indexes[i].length).length}</b> разделов с контентом</span>
+                            <span><b>1</b> мастер, который всегда прав</span>
                         </div>
+                        <div class="welcome-actions">
+                            <button class="btn btn-find" id="lucky"><i class="fas fa-clover"></i> Мне повезёт</button>
+                            <a class="btn btn-reset" href="help.html"><i class="fas fa-paper-plane"></i> Прислать свою запись</a>
+                        </div>
+                    </div>
+
+                    <h2 class="group-heading">Справочники</h2>
+                    <div class="quick-links">
+                        ${cfg.sections.map((s, i) => `
+                            <a href="list.html?s=${s.id}" class="quick-link">
+                                <i class="fas ${s.icon || 'fa-book'} quick-link-icon"></i>
+                                <span class="quick-link-text">
+                                    <b>${esc(s.title)}</b>
+                                    <small>${indexes[i].length ? `Записей: ${indexes[i].length}` : 'Пока пусто'}</small>
+                                </span>
+                            </a>`).join('')}
+                    </div>
+
+                    <h2 class="group-heading">Инструменты</h2>
+                    <div class="quick-links">
+                        <a href="tools.html#pointbuy" class="quick-link"><i class="fas fa-chart-simple quick-link-icon"></i><span class="quick-link-text"><b>Закуп характеристик</b><small>27 очков, без калькулятора на салфетке</small></span></a>
+                        <a href="tools.html#dice" class="quick-link"><i class="fas fa-dice-d20 quick-link-icon"></i><span class="quick-link-text"><b>Бросок костей</b><small>Когда свои кубики куда-то закатились</small></span></a>
+                        <a href="tools.html#encounter" class="quick-link"><i class="fas fa-skull-crossbones quick-link-icon"></i><span class="quick-link-text"><b>Сложность боя</b><small>Узнай заранее, выживет ли группа</small></span></a>
                     </div>`;
+
+                document.getElementById('lucky').addEventListener('click', DND.randomEntry);
             } catch (err) {
                 console.error(err);
                 DND.showError(content, err.message);

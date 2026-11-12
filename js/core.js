@@ -1,7 +1,8 @@
 // =====================================================================
 //  core.js — общий движок сайта.
-//  Загружает конфиг (data/sections.json), рисует боковое меню,
-//  форматирует поля и превращает JSON-блоки контента в HTML.
+//  Загружает конфиг (data/sections.json), рисует шапку и боковое меню,
+//  форматирует поля, превращает JSON-блоки контента в HTML
+//  и рисует страницу записи.
 //  Подключается на каждой странице ПЕРЕД скриптом страницы.
 // =====================================================================
 
@@ -27,7 +28,7 @@ const DND = (() => {
         return cfg.sections.find(s => s.id === id) || null;
     }
 
-    // Список записей раздела (короткие данные для карточек).
+    // Список записей раздела (короткие данные для каталога).
     // Если index.json ещё нет — раздел просто пустой.
     async function loadIndex(sectionId) {
         try {
@@ -43,12 +44,16 @@ const DND = (() => {
         return new URLSearchParams(location.search).get(name);
     }
 
-    // ---------- Безопасное хранилище (фильтры и т.п.) ----------
+    // ---------- Безопасные хранилища ----------
 
-    const store = {
-        get(key) { try { return JSON.parse(sessionStorage.getItem(key)); } catch { return null; } },
-        set(key, v) { try { sessionStorage.setItem(key, JSON.stringify(v)); } catch { /* ignore */ } }
-    };
+    function makeStore(storage) {
+        return {
+            get(key) { try { return JSON.parse(storage().getItem(key)); } catch { return null; } },
+            set(key, v) { try { storage().setItem(key, JSON.stringify(v)); } catch { /* ignore */ } }
+        };
+    }
+    const store = makeStore(() => sessionStorage);   // фильтры — до закрытия вкладки
+    const prefs = makeStore(() => localStorage);     // свёрнутые блоки, закрытые подсказки
 
     // ---------- Форматирование текста ----------
 
@@ -76,6 +81,7 @@ const DND = (() => {
     }
 
     const CR_LABELS = { 0.125: '1/8', 0.25: '1/4', 0.5: '1/2' };
+    let sourceNames = {};
 
     // Форматы полей, которые указываются в sections.json ("format": "...")
     function format(value, fmt, short = false) {
@@ -86,6 +92,12 @@ const DND = (() => {
                 return short ? `${value} ур.` : `${value} уровень`;
             case 'cr':
                 return `ПО ${CR_LABELS[value] || value}`;
+            case 'crShort':
+                return String(CR_LABELS[value] || value);
+            case 'yesno':
+                return value === true || value === 'true' ? 'Да' : 'Нет';
+            case 'source':
+                return sourceNames[value] || String(value);
             case 'abilities':
                 if (typeof value === 'object' && !Array.isArray(value)) {
                     return Object.entries(value)
@@ -93,20 +105,16 @@ const DND = (() => {
                         .map(([k, v]) => `${k} ${v}`).join(', ');
                 }
                 return String(value);
-            case 'components': {
-                const icons = {
-                    'В': '<i class="fas fa-comment" title="Вербальный"></i>',
-                    'С': '<i class="fas fa-hand-sparkles" title="Соматический"></i>',
-                    'М': '<i class="fas fa-gem" title="Материальный"></i>'
-                };
-                if (short) {
-                    return String(value).split(/,\s*/).map(c => icons[c.trim().charAt(0)] || '').join(' ');
-                }
-                return escapeHtml(value);
-            }
             default:
                 return Array.isArray(value) ? value.join(', ') : String(value);
         }
+    }
+
+    // «В, С, М (...)» → «ВСМ» / «ВС.» как на карточках списков
+    function componentLetters(value) {
+        const s = String(value || '').toUpperCase();
+        const has = l => new RegExp(`(^|[\\s,])${l}($|[\\s,(])`).test(s);
+        return ['В', 'С', 'М'].map(l => (has(l) ? l : '.')).join('');
     }
 
     function accentColor(sec, entry) {
@@ -115,9 +123,20 @@ const DND = (() => {
         return sec.accent.colors[v] || null;
     }
 
+    function rowIcon(sec, entry) {
+        if (!sec.rowIcon) return null;
+        const v = String(entry[sec.rowIcon.field] ?? '').toLowerCase();
+        return sec.rowIcon.icons[v] || sec.rowIcon.default || null;
+    }
+
     async function sourceName(code) {
         const cfg = await config();
         return (cfg.sources && cfg.sources[code]) || code;
+    }
+
+    async function isHomebrew(entry) {
+        const cfg = await config();
+        return (cfg.homebrewSources || []).includes(entry.source);
     }
 
     // ---------- Блоки контента ----------
@@ -169,63 +188,53 @@ const DND = (() => {
         return body();
     }
 
-    // ---------- Страница записи ----------
+    // ---------- Страница записи (как карточка на dnd.su) ----------
 
     async function renderEntry(sec, e) {
         const esc = escapeHtml;
         const id = e.id || '';
         const color = accentColor(sec, e);
-        const badge = sec.badge ? format(e[sec.badge.field], sec.badge.format) : '';
-        const subtitle = sec.subtitle && e[sec.subtitle] ? e[sec.subtitle] : '';
         const sourceFull = e.source ? await sourceName(e.source) : '';
 
-        const meta = (sec.meta || [])
-            .filter(m => e[m.field] !== undefined && e[m.field] !== '' && e[m.field] !== null)
-            .map(m => {
-                const value = format(e[m.field], m.format);
-                return `
-                <div class="info-item">
-                    <div class="info-label">${esc(m.label)}</div>
-                    <div class="info-value">${m.format === 'components' ? value : inline(value)}</div>
-                </div>`;
-            }).join('');
+        // Подзаголовок: «3 уровень, воплощение» / «Чудесный предмет, редкий»
+        const subParts = [];
+        if (sec.badge && e[sec.badge.field] !== undefined) subParts.push(format(e[sec.badge.field], sec.badge.format));
+        if (sec.subtitle && e[sec.subtitle] && sec.subtitle !== sec.badge?.field) subParts.push(e[sec.subtitle]);
+        const sub = subParts.filter(Boolean).join(', ');
 
-        // Теги показываются на странице, только если у раздела задан tagsTitle
-        // (у рас теги — краткий список особенностей для карточки, на странице они дублировались бы).
-        const tags = sec.tagsTitle && Array.isArray(e[sec.tags]) ? e[sec.tags] : [];
-        // Если есть полноценный контент — описание идёт только в карточку.
+        // Свойства: «**Время накладывания:** 1 действие»
+        const props = (sec.meta || [])
+            .filter(m => e[m.field] !== undefined && e[m.field] !== '' && e[m.field] !== null)
+            .map(m => `<li><strong>${esc(m.label)}:</strong> ${inline(format(e[m.field], m.format))}</li>`);
+        if (sec.tagsTitle && Array.isArray(e[sec.tags]) && e[sec.tags].length) {
+            props.push(`<li><strong>${esc(sec.tagsTitle)}:</strong> ${esc(e[sec.tags].join(', '))}</li>`);
+        }
+
+        const markers = (sec.markers || []).filter(m => e[m.field] === true)
+            .map(m => `<span class="marker" style="background:${m.color}" title="${esc(m.title)}">${esc(m.label)}</span>`).join('');
+
+        // Если есть полноценный контент — описание идёт только в карточку каталога.
         const body = e.content ? renderBlocks(e.content) : renderBlocks(e.description);
 
         return `
-            <article class="race-detail">
-                <div class="detail-header">
-                    <div class="detail-title">
-                        <div class="detail-name-ru">${esc(e.name_ru || id)}</div>
-                        ${e.name_en ? `<div class="detail-name-en">${esc(e.name_en)}</div>` : ''}
-                    </div>
-                    <div class="detail-badges">
-                        ${badge ? `<span class="detail-source" ${color ? `style="background:${color};color:#111"` : ''}>${esc(badge)}</span>` : ''}
-                        ${subtitle ? `<span class="detail-source detail-source-muted">${esc(subtitle)}</span>` : ''}
-                        ${e.source ? `<span class="detail-source" title="${esc(sourceFull)}">${esc(e.source)}</span>` : ''}
-                    </div>
-                    <a class="btn-back" href="list.html?s=${sec.id}"><i class="fas fa-arrow-left"></i> ${esc(sec.title)}</a>
-                </div>
-
-                <div class="detail-content">
-                    ${sourceFull ? `<p class="detail-source-line"><strong>Источник:</strong> ${esc(sourceFull)}</p>` : ''}
+            <article class="entry card">
+                <header class="entry-header">
+                    <h2 class="entry-title">${esc(e.name_ru || id)}${e.name_en ? ` <span class="entry-title-en">[${esc(e.name_en)}]</span>` : ''}</h2>
+                    ${e.source ? `<span class="entry-source" title="${esc(sourceFull)}">${esc(e.source)}</span>` : ''}
+                </header>
+                ${sub || markers ? `<div class="entry-sub" ${color ? `style="border-left-color:${color}"` : ''}>${esc(sub)} ${markers}</div>` : ''}
+                <div class="entry-body detail-content">
+                    ${e.image ? `<img class="entry-image" src="${encodeURI(e.image)}" alt="${esc(e.name_ru || '')}">` : ''}
                     ${e.quote ? renderBlocks({ quote: e.quote.text, author: e.quote.author }) : ''}
-                    ${meta ? `<section class="spell-info-grid">${meta}</section>` : ''}
+                    ${props.length ? `<ul class="entry-props">${props.join('')}</ul>` : ''}
                     ${body}
-                    ${tags.length ? `
-                        <section>
-                            <h4>${esc(sec.tagsTitle)}</h4>
-                            <div class="class-tags">${tags.map(t => `<span class="class-tag">${esc(t)}</span>`).join('')}</div>
-                        </section>` : ''}
+                    ${sourceFull ? `<p class="entry-source-line"><strong>Источник:</strong> ${esc(sourceFull)}</p>` : ''}
                 </div>
+                <footer class="entry-nav" id="entry-nav"></footer>
             </article>`;
     }
 
-    // ---------- Общий каркас страницы ----------
+    // ---------- Шапка и боковое меню ----------
 
     function fileProtocolWarning() {
         if (location.protocol !== 'file:') return false;
@@ -239,45 +248,116 @@ const DND = (() => {
         return true;
     }
 
-    async function renderLayout({ activeSection = null, pageTitle = '' } = {}) {
+    const EDITION_JOKES = [
+        'Эта редакция ещё в плейтесте у нашего мастера.',
+        'Не завезли. Приходите после следующей сессии.',
+        'Кубик выпал на 1. Редакция не переключилась.',
+        'Для доступа нужна настройка на предмет. У вас её нет.',
+        'Мастер сказал «нет». Мастер всегда прав.'
+    ];
+
+    function toast(text) {
+        document.querySelector('.toast')?.remove();
+        const t = document.createElement('div');
+        t.className = 'toast';
+        t.textContent = text;
+        document.body.appendChild(t);
+        setTimeout(() => t.classList.add('toast-hide'), 2600);
+        setTimeout(() => t.remove(), 3000);
+    }
+
+    function menuBlock(id, title, itemsHtml, extraClass = '') {
+        const collapsed = (prefs.get('collapsed') || []).includes(id);
+        return `
+            <nav class="menu-block ${extraClass} ${collapsed ? 'collapsed' : ''}" data-block="${id}">
+                <button class="menu-block-title" type="button">${title}<i class="fas fa-chevron-up"></i></button>
+                <ul class="menu-list">${itemsHtml}</ul>
+            </nav>`;
+    }
+
+    const menuItem = (href, icon, label, active = false, extra = '') => `
+        <li class="menu-item ${active ? 'active' : ''}">
+            <a href="${href}"><i class="fas ${icon} fa-fw"></i> ${label}${extra}</a>
+        </li>`;
+
+    async function randomEntry() {
         const cfg = await config();
+        const all = (await Promise.all(cfg.sections.map(async s =>
+            (await loadIndex(s.id)).map(e => ({ s: s.id, id: e.id }))))).flat();
+        if (!all.length) { toast('На сайте пока пусто — удача не на что упасть.'); return; }
+        const pick = all[Math.floor(Math.random() * all.length)];
+        location.href = `view.html?s=${pick.s}&id=${encodeURIComponent(pick.id)}`;
+    }
+
+    async function renderLayout({ activeSection = null, activePage = '', pageTitle = '' } = {}) {
+        const cfg = await config();
+        sourceNames = cfg.sources || {};
         document.title = pageTitle ? `${pageTitle} — ${cfg.site.title}` : cfg.site.title;
+
+        // Шапка «DnD Хоумбрю | Раздел»
+        const page = document.querySelector('.page');
+        if (page && !page.querySelector('.page-header')) {
+            page.insertAdjacentHTML('afterbegin', `
+                <header class="page-header">
+                    <button class="menu-toggle" type="button" aria-label="Меню"><i class="fas fa-bars"></i></button>
+                    <a href="index.html" class="brand">${escapeHtml(cfg.site.title)}</a>
+                    ${pageTitle ? `<span class="brand-sep"></span><h1 class="page-name">${escapeHtml(pageTitle)}</h1>` : ''}
+                </header>`);
+            page.querySelector('.menu-toggle').addEventListener('click', () => document.body.classList.toggle('menu-open'));
+        }
 
         const sidebar = document.getElementById('sidebar');
         if (!sidebar) return cfg;
 
+        const editions = cfg.site.editions || ['5e42', '5e∞'];
+
         sidebar.innerHTML = `
-            <div class="sidebar-header">
-                <a href="index.html" class="logo-title">${escapeHtml(cfg.site.title)}</a>
-                <h2 class="page-title">${escapeHtml(pageTitle || cfg.site.subtitle || '')}</h2>
+            <div class="edition-switch">
+                <button type="button" class="edition joke">${escapeHtml(editions[1])}</button>
+                <span>/</span>
+                <button type="button" class="edition active">${escapeHtml(editions[0])}</button>
             </div>
 
             <form class="site-search" action="list.html" method="get">
-                <input type="text" name="q" placeholder="Поиск по сайту..." value="${escapeHtml(param('q') || '')}">
+                <input type="text" name="q" placeholder="Поиск по сайту" value="${escapeHtml(param('q') || '')}">
                 <button type="submit" aria-label="Искать"><i class="fas fa-search"></i></button>
             </form>
 
-            <nav class="navigation-menu">
-                <h3 class="menu-title"><i class="fas fa-book"></i> Справочники</h3>
-                <ul class="menu-list">
-                    ${cfg.sections.map(s => `
-                        <li class="menu-item ${s.id === activeSection ? 'active' : ''}">
-                            <a href="list.html?s=${s.id}">
-                                <span class="icon">${s.icon || '•'}</span> ${escapeHtml(s.title)}
-                                <span class="menu-count" data-count="${s.id}"></span>
-                            </a>
-                        </li>`).join('')}
-                </ul>
-            </nav>
+            ${menuBlock('refs', 'Справочники', cfg.sections.map(s =>
+                menuItem(`list.html?s=${s.id}`, s.icon || 'fa-book', escapeHtml(s.title), s.id === activeSection,
+                    `<span class="menu-count" data-count="${s.id}"></span>`)).join(''))}
 
-            <nav class="navigation-menu">
-                <ul class="menu-list">
-                    <li class="menu-item ${location.pathname.endsWith('help.html') ? 'active' : ''}">
-                        <a href="help.html"><span class="icon">📨</span> Прислать свою запись</a>
-                    </li>
-                </ul>
-            </nav>
+            ${menuBlock('tools', 'Инструменты', `
+                ${menuItem('tools.html#pointbuy', 'fa-chart-simple', 'Закуп характеристик', activePage === 'pointbuy')}
+                ${menuItem('tools.html#dice', 'fa-dice-d20', 'Бросок костей', activePage === 'dice')}
+                ${menuItem('tools.html#encounter', 'fa-skull-crossbones', 'Сложность боя', activePage === 'encounter')}
+                ${menuItem('#lucky', 'fa-clover', 'Мне повезёт')}
+            `)}
+
+            ${menuBlock('table', 'Наш стол', `
+                ${menuItem('help.html', 'fa-paper-plane', 'Прислать свою запись', activePage === 'help')}
+                ${cfg.site.repo ? menuItem(cfg.site.repo, 'fa-code-branch', 'Исходники на GitHub') : ''}
+            `)}
         `;
+
+        // Сворачивание блоков меню (запоминается)
+        sidebar.querySelectorAll('.menu-block-title').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const block = btn.closest('.menu-block');
+                block.classList.toggle('collapsed');
+                const ids = new Set(prefs.get('collapsed') || []);
+                block.classList.contains('collapsed') ? ids.add(block.dataset.block) : ids.delete(block.dataset.block);
+                prefs.set('collapsed', [...ids]);
+            });
+        });
+
+        sidebar.querySelector('.edition.joke').addEventListener('click', () =>
+            toast(EDITION_JOKES[Math.floor(Math.random() * EDITION_JOKES.length)]));
+
+        sidebar.querySelector('a[href="#lucky"]').addEventListener('click', ev => {
+            ev.preventDefault();
+            randomEntry();
+        });
 
         // Счётчики записей в меню (не блокируют страницу)
         cfg.sections.forEach(async s => {
@@ -291,7 +371,7 @@ const DND = (() => {
 
     function showError(container, message) {
         container.innerHTML = `
-            <div class="empty-state">
+            <div class="card empty-state">
                 <i class="fas fa-exclamation-triangle"></i>
                 <h3>Ошибка</h3>
                 <p>${escapeHtml(message)}</p>
@@ -299,8 +379,9 @@ const DND = (() => {
     }
 
     return {
-        config, section, loadIndex, loadEntry, param, store,
-        escapeHtml, inline, stripTags, format, accentColor, sourceName,
-        renderBlocks, renderEntry, renderLayout, fileProtocolWarning, showError
+        config, section, loadIndex, loadEntry, param, store, prefs,
+        escapeHtml, inline, stripTags, format, componentLetters, accentColor, rowIcon,
+        sourceName, isHomebrew, renderBlocks, renderEntry, renderLayout,
+        fileProtocolWarning, showError, toast, randomEntry
     };
 })();

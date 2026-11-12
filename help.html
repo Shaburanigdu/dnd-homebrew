@@ -10,11 +10,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+    <div class="page">
     <div class="main-container">
         <aside class="sidebar" id="sidebar"></aside>
         <main class="content-area" id="content">
             <div class="help-page">
-                <h1 class="section-title">📨 Как прислать свою расу, класс или предмет</h1>
+                <h2 class="help-heading">Как прислать свою расу, класс или предмет</h2>
                 <p class="help-lead">
                     Ничего устанавливать не нужно. Всё делается прямо на этой странице:
                     выбираешь шаблон, заполняешь, нажимаешь «Проверить», скачиваешь файл и отправляешь его мне.
@@ -24,7 +25,7 @@
                 <!-- ШАГ 1 -->
                 <section class="help-step">
                     <h2><span class="step-num">1</span> Выбери, что хочешь прислать</h2>
-                    <div class="source-filters" id="template-buttons"></div>
+                    <div class="chips" id="template-buttons"></div>
                     <p class="help-note">Ниже в большом поле появится шаблон — заготовка, которую нужно заполнить.</p>
                 </section>
 
@@ -96,7 +97,7 @@
                 <!-- ШАГ 3 -->
                 <section class="help-step">
                     <h2><span class="step-num">3</span> Нажми «Проверить»</h2>
-                    <button class="btn-search" id="check-btn"><i class="fas fa-spell-check"></i> Проверить</button>
+                    <button class="btn btn-find" id="check-btn"><i class="fas fa-spell-check"></i> Проверить</button>
                     <div id="check-result"></div>
                 </section>
 
@@ -104,7 +105,7 @@
                 <section class="help-step">
                     <h2><span class="step-num">4</span> Скачай файл и отправь мне</h2>
                     <p>Кнопка станет доступна, когда проверка пройдёт без ошибок.</p>
-                    <button class="btn-search" id="download-btn" disabled><i class="fas fa-download"></i> Скачать файл</button>
+                    <button class="btn btn-find" id="download-btn" disabled><i class="fas fa-download"></i> Скачать файл</button>
                     <p class="help-note">Скачанный файл (например <code>sea-elf.json</code>) отправь мне в личку вместе с картинкой, если она есть.
                        Я добавлю его на сайт.</p>
                 </section>
@@ -116,6 +117,7 @@
                 </section>
             </div>
         </main>
+    </div>
     </div>
     <script src="js/core.js"></script>
     <script src="js/help.js"></script>
