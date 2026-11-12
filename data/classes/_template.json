@@ -4,6 +4,7 @@
   "name_en": "Class Name",
   "source": "CST",
   "image": "images/classes/имя-файла.jpg",
+  "gallery": ["images/classes/имя-файла-полная.jpg"],
   "description": "Короткое описание для карточки.",
   "features": ["Особенность 1-го уровня", "Особенность 2-го уровня"],
   "hit_die": "к10",

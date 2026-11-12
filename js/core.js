@@ -216,6 +216,24 @@ const DND = (() => {
         // Если есть полноценный контент — описание идёт только в карточку каталога.
         const body = e.content ? renderBlocks(e.content) : renderBlocks(e.description);
 
+        // Галерея в самом низу страницы. Поле "image" — только для карточки каталога
+        // (её обычно обрезают под карточку), на странице записи она не показывается.
+        // "gallery": ["images/a.jpg", { "src": "images/b.jpg", "caption": "Подпись" }]
+        const gallery = (Array.isArray(e.gallery) ? e.gallery : [])
+            .map(g => (typeof g === 'string' ? { src: g } : g))
+            .filter(g => g && g.src);
+        const galleryHTML = gallery.length ? `
+            <section class="entry-gallery">
+                <h4>Изображения</h4>
+                <div class="gallery-grid">
+                    ${gallery.map(g => `
+                        <a class="gallery-item" href="${encodeURI(g.src)}" target="_blank" rel="noopener">
+                            <img src="${encodeURI(g.src)}" alt="${esc(g.caption || e.name_ru || '')}" loading="lazy">
+                            ${g.caption ? `<span>${esc(g.caption)}</span>` : ''}
+                        </a>`).join('')}
+                </div>
+            </section>` : '';
+
         return `
             <article class="entry card">
                 <header class="entry-header">
@@ -224,11 +242,11 @@ const DND = (() => {
                 </header>
                 ${sub || markers ? `<div class="entry-sub" ${color ? `style="border-left-color:${color}"` : ''}>${esc(sub)} ${markers}</div>` : ''}
                 <div class="entry-body detail-content">
-                    ${e.image ? `<img class="entry-image" src="${encodeURI(e.image)}" alt="${esc(e.name_ru || '')}">` : ''}
                     ${e.quote ? renderBlocks({ quote: e.quote.text, author: e.quote.author }) : ''}
                     ${props.length ? `<ul class="entry-props">${props.join('')}</ul>` : ''}
                     ${body}
                     ${sourceFull ? `<p class="entry-source-line"><strong>Источник:</strong> ${esc(sourceFull)}</p>` : ''}
+                    ${galleryHTML}
                 </div>
                 <footer class="entry-nav" id="entry-nav"></footer>
             </article>`;
